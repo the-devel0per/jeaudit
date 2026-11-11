@@ -1,0 +1,174 @@
+{
+  "rows": 5030,
+  "entries": 2515,
+  "injected_entries": 127,
+  "tests": [
+    {
+      "test": "duplicate",
+      "label": "Duplicate entry",
+      "tp": 30,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "injected": 30,
+      "flagged": 30
+    },
+    {
+      "test": "weekend",
+      "label": "Weekend posting",
+      "tp": 20,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "injected": 20,
+      "flagged": 20
+    },
+    {
+      "test": "after_hours",
+      "label": "After-hours posting",
+      "tp": 15,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "injected": 15,
+      "flagged": 15
+    },
+    {
+      "test": "round_number",
+      "label": "Round amount",
+      "tp": 20,
+      "fp": 6,
+      "fn": 0,
+      "precision": 0.769,
+      "recall": 1.0,
+      "f1": 0.87,
+      "injected": 20,
+      "flagged": 26
+    },
+    {
+      "test": "threshold",
+      "label": "Just below threshold",
+      "tp": 20,
+      "fp": 16,
+      "fn": 0,
+      "precision": 0.556,
+      "recall": 1.0,
+      "f1": 0.714,
+      "injected": 20,
+      "flagged": 36
+    },
+    {
+      "test": "self_approved",
+      "label": "Self-approved",
+      "tp": 12,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "injected": 12,
+      "flagged": 12
+    },
+    {
+      "test": "unusual_pairing",
+      "label": "Unusual account pairing",
+      "tp": 10,
+      "fp": 0,
+      "fn": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "injected": 10,
+      "flagged": 10
+    },
+    {
+      "test": "ml",
+      "label": "Statistical outlier (ML)",
+      "tp": 37,
+      "fp": 14,
+      "fn": 90,
+      "precision": 0.725,
+      "recall": 0.291,
+      "f1": 0.416,
+      "injected": 127,
+      "flagged": 51
+    },
+    {
+      "test": "combined",
+      "label": "Combined risk score >= 15",
+      "tp": 127,
+      "fp": 21,
+      "fn": 0,
+      "precision": 0.858,
+      "recall": 1.0,
+      "f1": 0.924,
+      "injected": 127,
+      "flagged": 148
+    }
+  ],
+  "overlap": {
+    "both": 50,
+    "rule_only": 97,
+    "ml_only": 1,
+    "jaccard": 0.338
+  },
+  "benford": {
+    "digits": [
+      {
+        "digit": 1,
+        "expected": 0.3010299956639812,
+        "actual": 0.29184890656063617
+      },
+      {
+        "digit": 2,
+        "expected": 0.17609125905568124,
+        "actual": 0.17852882703777337
+      },
+      {
+        "digit": 3,
+        "expected": 0.12493873660829993,
+        "actual": 0.12127236580516898
+      },
+      {
+        "digit": 4,
+        "expected": 0.09691001300805642,
+        "actual": 0.09304174950298211
+      },
+      {
+        "digit": 5,
+        "expected": 0.07918124604762482,
+        "actual": 0.07952286282306163
+      },
+      {
+        "digit": 6,
+        "expected": 0.06694678963061322,
+        "actual": 0.06998011928429423
+      },
+      {
+        "digit": 7,
+        "expected": 0.05799194697768673,
+        "actual": 0.06322067594433399
+      },
+      {
+        "digit": 8,
+        "expected": 0.05115252244738129,
+        "actual": 0.050894632206759445
+      },
+      {
+        "digit": 9,
+        "expected": 0.04575749056067514,
+        "actual": 0.05168986083499006
+      }
+    ],
+    "chi2": 4.920656696355079,
+    "p_value": 0.766021841271842,
+    "n": 2515
+  },
+  "note": "Benford's Law is a ledger-level test with no per-entry ground truth, so it is not scored here."
+}

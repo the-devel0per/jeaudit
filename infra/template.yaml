@@ -1,0 +1,125 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: JE Guard - FastAPI on Lambda, S3, DynamoDB, CloudFront (synthetic data only)
+
+Parameters:
+  FrontendOrigin:
+    Type: String
+    Default: "http://localhost:5173"
+    Description: Allowed CORS origin (set to the CloudFront URL after first deploy)
+  GeminiApiKey:
+    Type: String
+    NoEcho: true
+    Default: ""
+    Description: Gemini API key for JE Guard
+
+Conditions:
+  HasGeminiApiKey: !Not [!Equals [!Ref GeminiApiKey, ""]]
+
+Resources:
+  DataBucket:            # uploads/ and exports/
+    Type: AWS::S3::Bucket
+    Properties:
+      PublicAccessBlockConfiguration: { BlockPublicAcls: true, BlockPublicPolicy: true, IgnorePublicAcls: true, RestrictPublicBuckets: true }
+      CorsConfiguration:
+        CorsRules:
+          - AllowedMethods: [PUT]
+            AllowedOrigins: [!Ref FrontendOrigin]
+            AllowedHeaders: ["*"]
+            MaxAge: 3000
+      LifecycleConfiguration:
+        Rules: [{ Id: expire-demo-data, Status: Enabled, ExpirationInDays: 30 }]
+
+  Table:                 # runs, flags, reviews (single table)
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions: [{ AttributeName: pk, AttributeType: S }, { AttributeName: sk, AttributeType: S }]
+      KeySchema: [{ AttributeName: pk, KeyType: HASH }, { AttributeName: sk, KeyType: RANGE }]
+
+  GeminiSecret:          # Stores Gemini API key securely
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Description: Gemini API key for JE Guard
+      SecretString: !If [HasGeminiApiKey, !Ref GeminiApiKey, "REPLACE_ME"]
+
+  Api:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      CorsConfiguration:
+        AllowOrigins: [!Ref FrontendOrigin]
+        AllowMethods: [GET, POST, PATCH, PUT, OPTIONS]
+        AllowHeaders: ["*"]
+        ExposeHeaders: [Content-Disposition]
+
+  Function:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Image
+      MemorySize: 2048
+      Timeout: 29            # API Gateway HTTP API limit
+      Environment:
+        Variables:
+          JE_GUARD_MODE: aws
+          BUCKET: !Ref DataBucket
+          TABLE: !Ref Table
+          GEMINI_SECRET_ID: !Ref GeminiSecret
+          GEMINI_MODEL: gemini-3.5-flash
+          ALLOWED_ORIGINS: !Ref FrontendOrigin
+      Policies:
+        - S3CrudPolicy: { BucketName: !Ref DataBucket }
+        - DynamoDBCrudPolicy: { TableName: !Ref Table }
+        - AWSSecretsManagerGetSecretValuePolicy: { SecretArn: !Ref GeminiSecret }
+      Events:
+        Any: { Type: HttpApi, Properties: { ApiId: !Ref Api, Path: /{proxy+}, Method: ANY } }
+        Root: { Type: HttpApi, Properties: { ApiId: !Ref Api, Path: /, Method: ANY } }
+    Metadata:
+      Dockerfile: Dockerfile
+      DockerContext: ../backend
+      DockerTag: v1
+
+  FrontendBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      PublicAccessBlockConfiguration: { BlockPublicAcls: true, BlockPublicPolicy: true, IgnorePublicAcls: true, RestrictPublicBuckets: true }
+
+  OAC:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig: { Name: !Sub "${AWS::StackName}-oac", OriginAccessControlOriginType: s3, SigningBehavior: always, SigningProtocol: sigv4 }
+
+  Distribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        DefaultRootObject: index.html
+        Origins:
+          - Id: site
+            DomainName: !GetAtt FrontendBucket.RegionalDomainName
+            OriginAccessControlId: !GetAtt OAC.Id
+            S3OriginConfig: { OriginAccessIdentity: "" }
+        DefaultCacheBehavior:
+          TargetOriginId: site
+          ViewerProtocolPolicy: redirect-to-https
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6   # CachingOptimized
+        CustomErrorResponses:   # SPA routing
+          - { ErrorCode: 403, ResponseCode: 200, ResponsePagePath: /index.html }
+          - { ErrorCode: 404, ResponseCode: 200, ResponsePagePath: /index.html }
+
+  FrontendPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FrontendBucket
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal: { Service: cloudfront.amazonaws.com }
+            Action: s3:GetObject
+            Resource: !Sub "${FrontendBucket.Arn}/*"
+            Condition: { StringEquals: { "AWS:SourceArn": !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${Distribution}" } }
+
+Outputs:
+  ApiUrl: { Value: !Sub "https://${Api}.execute-api.${AWS::Region}.amazonaws.com" }
+  SiteUrl: { Value: !Sub "https://${Distribution.DomainName}" }
+  FrontendBucketName: { Value: !Ref FrontendBucket }

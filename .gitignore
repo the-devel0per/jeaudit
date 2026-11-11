@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+
+# Environments & secrets
+.env
+.env.*
+!.env.example
+*.env
+
+# Builds & zips
+dist/
+frontend_s3_upload/
+*.zip
+
+# Caches & local runs
+.local/
+.pytest_cache/
+.ruff_cache/
+.aws-sam/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Synthetic data
+data/synthetic_gl.csv
+data/synthetic_gl.truth.json

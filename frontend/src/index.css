@@ -1,0 +1,28 @@
+@import "@fontsource-variable/inter";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Color roles as RGB triplets; the dark theme swaps the same roles. */
+:root {
+  --primary: 11 87 208; --on-primary: 255 255 255; --primary-container: 216 226 255; --on-primary-container: 0 29 83;
+  --surface: 250 250 253; --surface-container: 240 242 249; --surface-high: 232 234 243; --surface-variant: 224 227 238;
+  --on-surface: 26 27 32; --on-surface-variant: 68 71 79; --outline: 116 119 127; --outline-variant: 196 198 208;
+  --error: 186 26 26; --on-error: 255 255 255;
+  --critical: 179 20 18; --high: 176 74 0; --medium: 122 89 0; --low: 36 105 70;
+}
+.dark {
+  --primary: 168 199 250; --on-primary: 0 42 109; --primary-container: 33 65 130; --on-primary-container: 216 226 255;
+  --surface: 17 19 24; --surface-container: 27 29 36; --surface-high: 38 40 48; --surface-variant: 68 71 79;
+  --on-surface: 227 226 233; --on-surface-variant: 196 198 208; --outline: 142 144 153; --outline-variant: 68 71 79;
+  --error: 255 180 171; --on-error: 105 0 5;
+  --critical: 255 148 140; --high: 255 183 120; --medium: 240 200 90; --low: 130 214 164;
+}
+html { color-scheme: light; }
+html.dark { color-scheme: dark; }
+body { @apply bg-surface text-on-surface font-sans text-body antialiased; font-variant-numeric: tabular-nums; }
+*:focus-visible { outline: 3px solid rgb(var(--primary)); outline-offset: 2px; border-radius: 6px; }
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+}
+.skeleton { @apply rounded-xl bg-surface-variant/60 animate-pulse; }

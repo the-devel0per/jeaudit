@@ -1,0 +1,4 @@
+line-length = 120
+extend-exclude = ["frontend", "backend/.local"]
+[lint.per-file-ignores]
+"data/*" = ["E701", "E702", "E402", "E501"]
